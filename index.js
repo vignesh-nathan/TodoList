@@ -1,14 +1,19 @@
-import express from 'express'
-import bodyParser from 'body-parser'
-import fs from 'fs'
+const express = require('express')
+const bodyParser = require('body-parser')
+const path = require('path')
+const fs = require('fs')
 const app = express()
 const port = 3000
 
-var counter = 0
+let counter = 0
 
-var todos = {}
+let todos = {}
 
 app.use(bodyParser.json())
+
+app.get("/", (req, res) => {
+    res.sendFile(path.resolve('index.html'))
+})
 
 app.get("/todos", (req, res) => {
     fs.readFile('todos.txt', 'utf-8', (err, data) => {
@@ -18,7 +23,7 @@ app.get("/todos", (req, res) => {
 })
 
 app.get("/todos/:id", (req, res) => {
-    id = req.params.id
+    let id = req.params.id
     fs.readFile('todos.txt', 'utf-8', (err, data) => {
         todos = JSON.parse(data)
         if(todos[id]) {
@@ -32,7 +37,7 @@ app.get("/todos/:id", (req, res) => {
 app.post("/todos", (req, res) => {
     const title = req.body.title
     const description = req.body.description
-    counter += 1
+    counter = Math.floor(Math.random()*1000000)
     const newTodo = {
         "id": counter,
         "title": title,
@@ -83,6 +88,10 @@ app.delete("/todos/:id", (req, res) => {
             res.status(404).send("Item not found")
         }
     })
+})
+
+app.get('*', (req, res) => {
+    res.status(404).send("Invalid route")
 })
 
 app.listen(port, () => {

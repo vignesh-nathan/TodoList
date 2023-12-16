@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<head>
+    <title>
+        ToDo App
+    </title>
+</head>
+<script>
+    function displayTodos(data) {
+        let parentElement = document.getElementById("mainArea")
+        parentElement.innerHTML = JSON.stringify(data)
+    } 
+
+    function getResponse(response) {
+        response.json().then(displayTodos)
+    }
+
+    function getTodos() {
+        fetch("http://localhost:3000/todos", {
+            method: "GET"
+        }).then(getResponse)
+    }
+
+    getTodos()
+
+    function onPress() {
+        let todo = {
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value
+        }
+
+        console.log(todo)
+
+        fetch("http://localhost:3000/todos", {
+            method: "POST",
+            body: JSON.stringify(todo),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            
+        })
+
+        // fetch("http://localhost:3000/todos", {
+        //     method:"GET"
+        // }).then(callback)
+        
+    }
+</script>
+<body>
+    Todo Title
+    <br>
+    <input type="text" id="title">
+    <br><br>
+    Todo Description
+    <br>
+    <input type="text" id="description">
+    <br><br>
+    <button onclick="onPress()">Send ToDo</button>
+    <div id="mainArea">
+    </div>
+</body>
+
