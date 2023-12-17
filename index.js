@@ -5,9 +5,20 @@ const fs = require('fs')
 const app = express()
 const port = 3000
 
-let counter = 0
+function findTodo(id, todoList) {
+    for(let i = 0; i < todoList.length; i++) {
+        if(todoList[i].id == id) return i
+    }
+    return -1
+}
 
-let todos = {}
+function deleteAtIndex(index, todoList) {
+    let newList = []
+    for(let i = 0; i < todoList.length; i++) {
+        if(i !== index) newList.push(todoList[i])
+    }
+    return newList
+}
 
 app.use(bodyParser.json())
 
@@ -25,11 +36,13 @@ app.get("/todos", (req, res) => {
 app.get("/todos/:id", (req, res) => {
     let id = req.params.id
     fs.readFile('todos.txt', 'utf-8', (err, data) => {
-        todos = JSON.parse(data)
-        if(todos[id]) {
-            res.json(todos[id])
+        if (err) throw err
+        const todos = JSON.parse(data)
+        const todoIndex = findTodo(id, todos)
+        if(todoIndex === -1) {
+            res.status(404).send(`ID ${id} not found`)           
         } else {
-            res.status(404).send(`ID ${id} not found`)
+            res.json(todos[todoIndex])
         }
     }) 
 })
@@ -37,16 +50,16 @@ app.get("/todos/:id", (req, res) => {
 app.post("/todos", (req, res) => {
     const title = req.body.title
     const description = req.body.description
-    counter = Math.floor(Math.random()*1000000)
     const newTodo = {
-        "id": counter,
+        "id": Math.floor(Math.random()*1000000),
         "title": title,
         "description": description,
         "completed": false
     }
     fs.readFile('./todos.txt', 'utf-8', (err, data) => {
+        if (err) throw err
         let todoList = JSON.parse(data)
-        todoList[counter] = newTodo
+        todoList.push(newTodo)
         fs.writeFile('./todos.txt', JSON.stringify(todoList), (err) => {
             if (err) throw err
             res.status(201).json(newTodo)
@@ -61,15 +74,21 @@ app.put("/todos/:id", (req, res) => {
     
     fs.readFile('./todos.txt', 'utf-8', (err, data) => {
         let todoList = JSON.parse(data)
-        if(todoList[id]) {
-            todoList[id].title = body.title
-            todoList[id].completed = body.completed
+        let todoIndex = findTodo(id, todoList)
+        if(todoIndex === -1) {
+            res.status(404).send("Item not found")
+        } else {
+            let updatedTodo = {
+                id: todoList[todoIndex].id,
+                title: body.title,
+                description: body.description,
+                completed: body.completed
+            }
+            todoList[todoIndex] = updatedTodo
             fs.writeFile('./todos.txt', JSON.stringify(todoList), (err) => {
                 if (err) throw err
-                res.status(201).json(todoList[id])
+                res.status(201).json(updatedTodo)
             })
-        } else {
-            res.status(404).send("Item not found")
         }
     })   
 })
@@ -77,15 +96,18 @@ app.put("/todos/:id", (req, res) => {
 app.delete("/todos/:id", (req, res) => {
     let id = req.params.id
     fs.readFile('./todos.txt', 'utf-8', (err, data) => {
+        if(err) throw err
         let todos = JSON.parse(data)
-        if(todos[id]) {
-            delete todos[id]
+        let todoIndex = findTodo(id, todos)
+        if(todoIndex === -1) {
+            res.status(404).send("Item not found")
+            
+        } else {
+            todos = deleteAtIndex(todoIndex, todos)
             fs.writeFile('./todos.txt', JSON.stringify(todos), (err) => {
                 if (err) throw err
-                res.json(todos)
+                res.status(201).json(todos)
             })
-        } else {
-            res.status(404).send("Item not found")
         }
     })
 })

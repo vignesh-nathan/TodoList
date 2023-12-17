@@ -6,9 +6,50 @@
     </title>
 </head>
 <script>
+    function removeTodo(id) {
+        let parentElement = document.getElementById("mainArea")
+        parentElement.removeChild(document.getElementById(`${id}`))
+    }
+
+    function handleResponse(response, id) {
+        response.json().then(() => removeTodo(id))
+    }
+
+    function deleteTodo(id) {
+        fetch("http://localhost:3000/todos/" + id, {
+            method: "DELETE",
+        }).then(response => handleResponse(response, id)) 
+    }
+
     function displayTodos(data) {
         let parentElement = document.getElementById("mainArea")
-        parentElement.innerHTML = JSON.stringify(data)
+        for(let i = 0; i < data.length; i++) {
+            console.log(data[i])
+            let childElement = document.createElement("div")
+            childElement.setAttribute("id", data[i].id)
+
+            let grandchildElement1 = document.createElement("span")
+            grandchildElement1.innerHTML = data[i].title 
+
+            let grandchildElement2 = document.createElement("span")
+            grandchildElement2.innerHTML = data[i].description
+
+            let grandchildElement3 = document.createElement("button")
+            grandchildElement3.innerHTML = "Delete"
+            grandchildElement3.setAttribute("onclick", "deleteTodo(" + data[i].id + ")")  
+
+            childElement.appendChild(grandchildElement1)
+            childElement.appendChild(grandchildElement2)
+            childElement.appendChild(grandchildElement3)
+
+            parentElement.appendChild(childElement)
+        }
+
+        // let childElement = document.createElement("div")
+        // let grandchildElement = document.createElement("span")
+        // grandchildElement.innerHTML = "hello"
+        // childElement.appendChild(grandchildElement)
+        // parentElement.appendChild(childElement)
     } 
 
     function getResponse(response) {
@@ -23,13 +64,41 @@
 
     getTodos()
 
+    function parseResponse(data) {
+        console.log(data)
+        let parentElement = document.getElementById("mainArea")
+        let childElement = document.createElement("div")
+        childElement.setAttribute("id", data.id)
+
+        let grandchildElement1 = document.createElement("span")
+        grandchildElement1.innerHTML = data.title 
+
+        let grandchildElement2 = document.createElement("span")
+        grandchildElement2.innerHTML = data.description
+
+        let grandchildElement3 = document.createElement("button")
+        grandchildElement3.innerHTML = "Delete"
+        grandchildElement3.setAttribute("onclick", "deleteTodo(" + data.id + ")")  
+
+        childElement.appendChild(grandchildElement1)
+        childElement.appendChild(grandchildElement2)
+        childElement.appendChild(grandchildElement3)
+
+        parentElement.appendChild(childElement)
+
+    }
+
+    function callback(response) {
+        response.json().then(parseResponse)
+    }
+
     function onPress() {
         let todo = {
             title: document.getElementById('title').value,
             description: document.getElementById('description').value
         }
 
-        console.log(todo)
+        // console.log(todo)
 
         fetch("http://localhost:3000/todos", {
             method: "POST",
@@ -38,7 +107,7 @@
                 "Content-Type": "application/json"
             },
             
-        })
+        }).then(callback)
 
         // fetch("http://localhost:3000/todos", {
         //     method:"GET"
